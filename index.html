@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifying Your Connection</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        .logo {
+            margin-bottom: 20px;
+        }
+        .logo h2 {
+            color: #333;
+            margin: 0;
+        }
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: #f60;
+            border-radius: 50%;
+            margin: 0 5px;
+            animation: bounce 0.4s infinite alternate;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            to { transform: translateY(-10px); }
+        }
+        .captcha-container {
+            margin-top: 20px;
+        }
+        .captcha-container canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        input[type="submit"] {
+            background: #f60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background: #e55;
+        }
+        .message {
+            color: red;
+            margin-top: 10px;
+        }
+        .debug-info {
+            color: #333;
+            font-size: 14px;
+            margin-top: 10px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            word-wrap: break-word;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h2>SecureWeb</h2>
+        </div>
+        <h1>Just a moment...</h1>
+        <p>We're verifying that you're not a bot.</p>
+        <div class="loading">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="captcha-container" id="captcha-container" style="display: none;">
+            <canvas id="captchaCanvas" width="150" height="50"></canvas>
+            <form id="captchaForm">
+                <input type="text" id="captchaInput" placeholder="Enter CAPTCHA code" required>
+                <input type="submit" value="Verify">
+            </form>
+            <p class="message" id="message">Debug: Check browser console for IP details</p>
+            <div class="debug-info" id="debug-info" style="display: none;"></div>
+        </div>
+        <div class="footer">
+            Powered by SecureWeb
+        </div>
+    </div>
+
+    <script>
+        // Generate random CAPTCHA code
+        function generateCaptchaCode(length = 6) {
+            const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let code = '';
+            for (let i = 0; i < length; i++) {
+                code += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return code;
+        }
+
+        // Draw CAPTCHA on canvas
+        function drawCaptcha(code) {
+            const canvas = document.getElementById('captchaCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Clear canvas
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Add noise
+            ctx.fillStyle = '#646464';
+            for (let i = 0; i < 100; i++) {
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1, 1);
+            }
+
+            // Draw text
+            ctx.fillStyle = '#000000';
+            ctx.font = '20px monospace';
+            ctx.fillText(code, 30, 30);
+
+            // Add lines
+            ctx.strokeStyle = '#646464';
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.stroke();
+            }
+
+            return code;
+        }
+
+        // Check URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const forceCaptcha = urlParams.get('force_captcha') === '1';
+        const debugIp = urlParams.get('debug_ip') === '1';
+
+        // Blog pages for redirection
+        const blogs = ['blog1.html', 'blog2.html', 'blog3.html'];
+
+        // Initialize CAPTCHA
+        let captchaCode = generateCaptchaCode();
+
+        // Check IP and handle CAPTCHA
+        function checkIpAndShowCaptcha() {
+            if (forceCaptcha) {
+                console.log('Force CAPTCHA enabled');
+                showCaptcha();
+                return;
+            }
+
+            // Use ipapi.co JSONP for client-side IP check
+            const script = document.createElement('script');
+            script.src = 'https://ipapi.co/jsonp/?callback=handleIpResponse';
+            document.head.appendChild(script);
+        }
+
+        // Handle IP API response
+        window.handleIpResponse = function(data) {
+            console.log('IP API Response:', data);
+            const debugInfo = {
+                ip: data.ip || 'unknown',
+                country_code: data.country_code || 'unknown',
+                is_non_indian: data.country_code !== 'IN',
+                json_response: data,
+                error: data.error ? data.error_message : ''
+            };
+
+            // Log to console
+            console.log('IP:', debugInfo.ip);
+            console.log('Country Code:', debugInfo.country_code);
+            console.log('Non-Indian:', debugInfo.is_non_indian);
+            console.log('JSON Response:', debugInfo.json_response);
+            console.log('Error:', debugInfo.error);
+
+            // Show debug info if enabled
+            if (debugIp) {
+                const debugDiv = document.getElementById('debug-info');
+                debugDiv.style.display = 'block';
+                debugDiv.innerHTML = `
+                    <p>IP: ${debugInfo.ip}</p>
+                    <p>Country Code: ${debugInfo.country_code}</p>
+                    <p>Non-Indian: ${debugInfo.is_non_indian ? 'Yes' : 'No'}</p>
+                    <p>JSON Response: <pre>${JSON.stringify(debugInfo.json_response, null, 2)}</pre></p>
+                    <p>Error: ${debugInfo.error || 'None'}</p>
+                `;
+            }
+
+            // Decide whether to show CAPTCHA or redirect
+            if (debugInfo.is_non_indian) {
+                console.log('Non-Indian IP detected, showing CAPTCHA');
+                showCaptcha();
+            } else {
+                console.log('Indian IP detected, redirecting to random blog');
+                window.location.href = blogs[Math.floor(Math.random() * blogs.length)];
+            }
+        };
+
+        // Handle API failure
+        function handleIpError() {
+            console.log('IP API failed, assuming non-Indian IP');
+            const debugInfo = {
+                ip: 'unknown',
+                country_code: 'unknown',
+                is_non_indian: true,
+                json_response: {},
+                error: 'IP API request failed'
+            };
+
+            if (debugIp) {
+                const debugDiv = document.getElementById('debug-info');
+                debugDiv.style.display = 'block';
+                debugDiv.innerHTML = `
+                    <p>IP: ${debugInfo.ip}</p>
+                    <p>Country Code: ${debugInfo.country_code}</p>
+                    <p>Non-Indian: ${debugInfo.is_non_indian ? 'Yes' : 'No'}</p>
+                    <p>JSON Response: <pre>${JSON.stringify(debugInfo.json_response, null, 2)}</pre></p>
+                    <p>Error: ${debugInfo.error}</p>
+                `;
+            }
+
+            showCaptcha();
+        }
+
+        // Show CAPTCHA
+        function showCaptcha() {
+            document.getElementById('captcha-container').style.display = 'block';
+            captchaCode = drawCaptcha(captchaCode);
+        }
+
+        // Handle CAPTCHA form submission
+        document.getElementById('captchaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('captchaInput').value.toUpperCase().trim();
+            const message = document.getElementById('message');
+
+            if (input === captchaCode) {
+                console.log('CAPTCHA verified, redirecting to random blog');
+                window.location.href = blogs[Math.floor(Math.random() * blogs.length)];
+            } else {
+                console.log('Incorrect CAPTCHA');
+                message.textContent = 'Incorrect CAPTCHA, please try again.';
+                captchaCode = generateCaptchaCode();
+                drawCaptcha(captchaCode);
+                document.getElementById('captchaInput').value = '';
+            }
+        });
+
+        // Handle API script error
+        const ipScript = document.createElement('script');
+        ipScript.src = 'https://ipapi.co/jsonp/?callback=handleIpResponse';
+        ipScript.onerror = handleIpError;
+        document.head.appendChild(ipScript);
+
+        // Start IP check
+        checkIpAndShowCaptcha();
+    </script>
+</body>
+</html>
