@@ -133,6 +133,9 @@
     </div>
 
     <script>
+        // Clear verification flag on page load
+        sessionStorage.removeItem('captcha_verified');
+
         // Generate random CAPTCHA code
         function generateCaptchaCode(length = 6) {
             const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -180,8 +183,8 @@
         const forceCaptcha = urlParams.get('force_captcha') === '1';
         const debugIp = urlParams.get('debug_ip') === '1';
 
-        // Blog pages for redirection
-        const blogs = ['blog1.html', 'blog2.html', 'blog3.html'];
+        // Redirect target
+        const blogPage = 'blog.html';
 
         // Initialize CAPTCHA
         let captchaCode = generateCaptchaCode();
@@ -236,8 +239,9 @@
                 console.log('Non-Indian IP detected, showing CAPTCHA');
                 showCaptcha();
             } else {
-                console.log('Indian IP detected, redirecting to random blog');
-                window.location.href = blogs[Math.floor(Math.random() * blogs.length)];
+                console.log('Indian IP detected, redirecting to blog');
+                sessionStorage.setItem('captcha_verified', 'true');
+                window.location.href = blogPage;
             }
         };
 
@@ -280,8 +284,9 @@
             const message = document.getElementById('message');
 
             if (input === captchaCode) {
-                console.log('CAPTCHA verified, redirecting to random blog');
-                window.location.href = blogs[Math.floor(Math.random() * blogs.length)];
+                console.log('CAPTCHA verified, redirecting to blog');
+                sessionStorage.setItem('captcha_verified', 'true');
+                window.location.href = blogPage;
             } else {
                 console.log('Incorrect CAPTCHA');
                 message.textContent = 'Incorrect CAPTCHA, please try again.';
