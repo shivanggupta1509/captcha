@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Security Project</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #444;
+            margin-top: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+        ul {
+            color: #666;
+            line-height: 1.6;
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .developers {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .developer {
+            margin: 10px 0;
+        }
+        .developer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Network Security Project: CAPTCHA-Based Access Control</h1>
+        <p>
+            This project implements a robust network security system designed to protect web content through CAPTCHA-based access control and automatic VPN detection. The system ensures that only authorized users can access protected pages, enhancing security against unauthorized access and potential threats.
+        </p>
+        <h2>Key Features</h2>
+        <ul>
+            <li><strong>CAPTCHA Verification</strong>: Utilizes a client-side HTML5 Canvas-based CAPTCHA to verify users with IP addresses associated with VPNs, ensuring only legitimate users gain access.</li>
+            <li><strong>Automatic VPN Detection</strong>: Leverages the ipapi.co API to identify VPN usage through IP geolocation, enforcing stricter access controls for VPN users.</li>
+            <li><strong>Protected Content</strong>: Restricts access to this blog page, redirecting unauthorized attempts (without CAPTCHA verification) back to the verification page.</li>
+            <li><strong>Seamless Non-VPN Access</strong>: Automatically grants access to users with non-VPN IP addresses, bypassing CAPTCHA for a smooth user experience.</li>
+            <li><strong>Client-Side Implementation</strong>: Built entirely with HTML and JavaScript, ensuring easy deployment and compatibility without server-side dependencies.</li>
+        </ul>
+        <h2>Technical Details</h2>
+        <p>
+            The system uses a client-side approach to perform IP-based access control. Upon visiting the main page, the ipapi.co API checks the user's IP address to detect VPN usage. If a VPN is detected, a CAPTCHA is displayed, requiring the user to enter a randomly generated code. Successful verification sets a client-side flag, granting access to this blog page. Non-VPN users are redirected directly to the blog page without CAPTCHA. Direct access to the blog page is protected, redirecting unauthorized users to the verification page.
+        </p>
+        <div class="developers">
+            <h2>Developed By</h2>
+            <div class="developer">
+                <p><strong>Name</strong>: Akash Singh</p>
+                <p><strong>PRN</strong>: 2414110445</p>
+                <p><strong>Roll No</strong>: 20</p>
+            </div>
+            <div class="developer">
+                <p><strong>Name</strong>: Jatin Tiwari</p>
+                <p><strong>PRN</strong>: 2414110444</p>
+                <p><strong>Roll No</strong>: 19</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if CAPTCHA was verified
+        if (!sessionStorage.getItem('captcha_verified')) {
+            console.log('Access to blog.html denied: CAPTCHA not verified');
+            window.location.href = 'index.html';
+        } else {
+            console.log('Access to blog.html granted: CAPTCHA verified');
+        }
+    </script>
+</body>
+</html>
